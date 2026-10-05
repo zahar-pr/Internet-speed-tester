@@ -22,7 +22,7 @@ form {
   align-items: flex-end;
 }
 
-label {
+label, .field {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -31,9 +31,9 @@ label {
   flex: 1 1 120px;
 }
 
-label.wide { flex: 1 1 100%; }
+.wide { flex: 1 1 100%; }
 
-input, select, button {
+input, button {
   font: inherit;
   font-size: 1rem;
   height: 42px;
@@ -45,19 +45,29 @@ input, select, button {
   width: 100%;
 }
 
-input:focus, select:focus { outline: none; border-color: #6b8fd6; }
+input:focus { outline: none; border-color: #6b8fd6; }
 
-/* Свой вид выпадающего списка вместо системного */
-.select { position: relative; display: block; }
+/* Выпадающий список на JS: открывается по клику */
+.dropdown { position: relative; }
 
-.select select {
-  appearance: none;
-  -webkit-appearance: none;
-  padding-right: 36px;
-  cursor: pointer;
+button.dropdown-toggle {
+  width: 100%;
+  padding: 0 36px 0 12px;
+  background: #262626;
+  border-color: #3a3a3a;
+  color: #e0e0e0;
+  font-weight: normal;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
 }
 
-.select::after {
+button.dropdown-toggle:hover { background: #2c2c2c; }
+.dropdown.open button.dropdown-toggle { border-color: #6b8fd6; }
+
+button.dropdown-toggle::after {
   content: "";
   position: absolute;
   right: 14px;
@@ -67,10 +77,37 @@ input:focus, select:focus { outline: none; border-color: #6b8fd6; }
   border-right: 2px solid #9e9e9e;
   border-bottom: 2px solid #9e9e9e;
   transform: translateY(-70%) rotate(45deg);
-  pointer-events: none;
+  transition: transform 0.15s;
 }
 
-select option { background: #262626; color: #e0e0e0; }
+.dropdown.open button.dropdown-toggle::after { transform: translateY(-30%) rotate(-135deg); }
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  max-height: 440px;
+  overflow-y: auto;
+  background: #262626;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.dropdown-menu li {
+  padding: 10px 12px;
+  font-size: 1rem;
+  color: #e0e0e0;
+  cursor: pointer;
+}
+
+.dropdown-menu li:hover { background: #333; }
+.dropdown-menu li[aria-selected="true"] { color: #8fb0f0; }
 
 button {
   width: auto;

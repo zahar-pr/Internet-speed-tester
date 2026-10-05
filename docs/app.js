@@ -1,6 +1,5 @@
 const form = document.getElementById("form");
 const startBtn = document.getElementById("start");
-const preset = document.getElementById("preset");
 const urlInput = document.getElementById("url");
 const log = document.getElementById("log");
 const popup = document.getElementById("popup");
@@ -8,17 +7,61 @@ const popup = document.getElementById("popup");
 // url -> размер в байтах для готовых файлов (нужен, если сервер не отдает CORS)
 const knownSizes = { "test-5mb.bin": 5242880 };
 
+// Выпадающий список готовых файлов
+const dropdown = document.getElementById("dropdown");
+const toggle = document.getElementById("dropdown-toggle");
+const menu = document.getElementById("dropdown-menu");
+const items = [{ name: "BIN с этого сервера, 5 МБ", url: "test-5mb.bin" }];
+
+function renderMenu() {
+  menu.innerHTML = "";
+  for (const item of items) {
+    const li = document.createElement("li");
+    li.textContent = item.name;
+    li.setAttribute("role", "option");
+    li.setAttribute("aria-selected", String(item.url === urlInput.value));
+    li.addEventListener("click", () => choose(item));
+    menu.appendChild(li);
+  }
+}
+
+function choose(item) {
+  toggle.textContent = item.name;
+  urlInput.value = item.url;
+  closeMenu();
+}
+
+function openMenu() {
+  renderMenu();
+  menu.hidden = false;
+  dropdown.classList.add("open");
+  toggle.setAttribute("aria-expanded", "true");
+}
+
+function closeMenu() {
+  menu.hidden = true;
+  dropdown.classList.remove("open");
+  toggle.setAttribute("aria-expanded", "false");
+}
+
+toggle.addEventListener("click", () => (menu.hidden ? openMenu() : closeMenu()));
+document.addEventListener("click", (e) => {
+  if (!dropdown.contains(e.target)) closeMenu();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeMenu();
+});
+toggle.textContent = items[0].name;
+
 fetch("links.json")
   .then((r) => r.json())
   .then((links) => {
     for (const link of links) {
       knownSizes[link.url] = link.size;
-      preset.add(new Option(link.name, link.url));
+      items.push(link);
     }
   })
   .catch(() => {});
-
-preset.addEventListener("change", () => (urlInput.value = preset.value));
 
 function withNoCache(url) {
   const sep = url.includes("?") ? "&" : "?";

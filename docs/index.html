@@ -10,13 +10,12 @@
   <main>
     <h1>Замер скорости интернета</h1>
     <form id="form">
-      <label class="wide">Готовый файл
-        <span class="select">
-          <select id="preset">
-            <option value="test-5mb.bin">BIN с этого сервера, 5 МБ</option>
-          </select>
-        </span>
-      </label>
+      <div class="field wide">Готовый файл
+        <div class="dropdown" id="dropdown">
+          <button type="button" class="dropdown-toggle" id="dropdown-toggle" aria-haspopup="listbox" aria-expanded="false"></button>
+          <ul class="dropdown-menu" id="dropdown-menu" role="listbox" hidden></ul>
+        </div>
+      </div>
       <label class="wide">Адрес файла
         <input id="url" type="text" value="test-5mb.bin" required>
       </label>
