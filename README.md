@@ -22,7 +22,7 @@ https://zahar-pr.github.io/Internet-speed-tester/
 
 ## Консольный скрипт
 
-Требуется Python 3.8+. Зависимости не нужны.
+Требуется Python 3.9+. Зависимости не нужны.
 
 ```bash
 git clone https://github.com/zahar-pr/Internet-speed-tester.git
