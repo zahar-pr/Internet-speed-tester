@@ -11,9 +11,11 @@
     <h1>Замер скорости интернета</h1>
     <form id="form">
       <label class="wide">Готовый файл
-        <select id="preset">
-          <option value="test-5mb.bin" data-size="5242880">BIN с этого сервера, 5 МБ</option>
-        </select>
+        <span class="select">
+          <select id="preset">
+            <option value="test-5mb.bin">BIN с этого сервера, 5 МБ</option>
+          </select>
+        </span>
       </label>
       <label class="wide">Адрес файла
         <input id="url" type="text" value="test-5mb.bin" required>
@@ -21,21 +23,24 @@
       <label>Запросов
         <input id="count" type="number" min="1" max="50" value="10">
       </label>
-      <label>Размер, МБ
-        <input id="size" type="number" min="0" step="any" placeholder="авто">
-      </label>
       <button id="start" type="submit">Старт</button>
     </form>
-    <p class="hint">Работает с любым адресом. Если сервер не разрешает CORS, время замеряется через Resource Timing, а размер берется из списка готовых файлов или из поля «Размер».</p>
-
-    <section id="result" class="result" hidden>
-      <div class="stat"><span id="speed">-</span><small>МБ/с</small></div>
-      <div class="stat"><span id="avg">-</span><small>сред. время, с</small></div>
-      <div class="stat"><span id="total">-</span><small>скачано, МБ</small></div>
-    </section>
 
     <ol id="log"></ol>
   </main>
+
+  <dialog id="popup">
+    <h2>Итоги</h2>
+    <p id="popup-url" class="url"></p>
+    <dl>
+      <dt>Скорость</dt><dd><b id="speed">-</b> МБ/с <small id="mbit"></small></dd>
+      <dt>Среднее время запроса</dt><dd id="avg">-</dd>
+      <dt>Скачано всего</dt><dd id="total">-</dd>
+      <dt>Успешных запросов</dt><dd id="ok">-</dd>
+    </dl>
+    <form method="dialog"><button>Закрыть</button></form>
+  </dialog>
+
   <script src="app.js"></script>
 </body>
 </html>

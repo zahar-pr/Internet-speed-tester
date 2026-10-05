@@ -3,7 +3,7 @@ const startBtn = document.getElementById("start");
 const preset = document.getElementById("preset");
 const urlInput = document.getElementById("url");
 const log = document.getElementById("log");
-const result = document.getElementById("result");
+const popup = document.getElementById("popup");
 
 // url -> размер в байтах для готовых файлов (нужен, если сервер не отдает CORS)
 const knownSizes = { "test-5mb.bin": 5242880 };
@@ -55,14 +55,14 @@ function waitForTiming(fullUrl, timeoutMs = 120000) {
   });
 }
 
-async function download(url, manualSize) {
+async function download(url) {
   const reqUrl = withNoCache(url);
   try {
     return { ...(await downloadCors(reqUrl)), cors: true };
   } catch (err) {
     if (!(err instanceof TypeError)) throw err; // HTTP-ошибка, а не CORS
     performance.clearResourceTimings();
-    return { ...(await downloadNoCors(withNoCache(url), manualSize ?? knownSizes[url] ?? null)), cors: false };
+    return { ...(await downloadNoCors(withNoCache(url), knownSizes[url] ?? null)), cors: false };
   }
 }
 
@@ -79,12 +79,9 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const url = urlInput.value.trim();
   const count = Number(document.getElementById("count").value) || 10;
-  const sizeMb = parseFloat(document.getElementById("size").value);
-  const manualSize = sizeMb > 0 ? sizeMb * 1e6 : null;
 
   startBtn.disabled = true;
   log.innerHTML = "";
-  result.hidden = true;
 
   let totalBytes = 0;
   let totalSeconds = 0;
@@ -93,7 +90,7 @@ form.addEventListener("submit", async (e) => {
 
   for (let i = 1; i <= count; i++) {
     try {
-      const { size, seconds, cors } = await download(url, manualSize);
+      const { size, seconds, cors } = await download(url);
       totalSeconds += seconds;
       ok++;
       const mode = cors ? "" : " [без CORS]";
@@ -109,11 +106,13 @@ form.addEventListener("submit", async (e) => {
     }
   }
 
-  if (ok) {
-    document.getElementById("speed").textContent = sizeUnknown ? "?" : mb(totalBytes / totalSeconds);
-    document.getElementById("avg").textContent = (totalSeconds / ok).toFixed(3);
-    document.getElementById("total").textContent = sizeUnknown ? "?" : mb(totalBytes);
-    result.hidden = false;
-  }
+  const speed = ok && !sizeUnknown ? totalBytes / totalSeconds / 1e6 : null;
+  document.getElementById("popup-url").textContent = url;
+  document.getElementById("speed").textContent = speed == null ? "?" : speed.toFixed(2);
+  document.getElementById("mbit").textContent = speed == null ? "" : `${(speed * 8).toFixed(2)} Мбит/с`;
+  document.getElementById("avg").textContent = ok ? `${(totalSeconds / ok).toFixed(3)} с` : "-";
+  document.getElementById("total").textContent = ok && !sizeUnknown ? `${mb(totalBytes)} МБ` : "?";
+  document.getElementById("ok").textContent = `${ok} из ${count}`;
+  popup.showModal();
   startBtn.disabled = false;
 });
