@@ -1,0 +1,74 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 16px;
+}
+
+h1 { font-size: 1.6rem; margin-bottom: 24px; }
+
+form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  flex: 1 1 120px;
+}
+
+label:first-child { flex: 3 1 260px; }
+
+input, button {
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: inherit;
+}
+
+button {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:disabled { opacity: 0.5; cursor: wait; }
+
+.hint { font-size: 0.8rem; color: #64748b; }
+
+.result {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.stat {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stat span { display: block; font-size: 1.8rem; font-weight: 700; color: #38bdf8; }
+.stat small { color: #94a3b8; }
+
+#log { font-family: ui-monospace, monospace; font-size: 0.85rem; color: #cbd5e1; padding-left: 24px; }
+#log .err { color: #f87171; }
