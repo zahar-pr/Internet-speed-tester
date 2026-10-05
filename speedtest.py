@@ -2,12 +2,20 @@
 """Замер скорости интернета: N последовательных запросов к URL, среднее время и скорость."""
 
 import argparse
+import json
 import sys
 import time
 import urllib.request
+from pathlib import Path
 
 DEFAULT_URL = "https://zahar-pr.github.io/Internet-speed-tester/test-5mb.bin"
 CHUNK = 64 * 1024
+LINKS_FILE = Path(__file__).parent / "docs" / "links.json"
+
+
+def load_links() -> list[dict]:
+    """Готовые ссылки на файлы разного размера и формата (общие с веб-версией)."""
+    return json.loads(LINKS_FILE.read_text(encoding="utf-8"))
 
 
 def download(url: str, timeout: float) -> tuple[int, float]:
@@ -27,10 +35,24 @@ def download(url: str, timeout: float) -> tuple[int, float]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Замер скорости скачивания")
-    parser.add_argument("url", nargs="?", default=DEFAULT_URL, help="адрес тяжелого файла")
+    parser.add_argument("url", nargs="?", default=DEFAULT_URL,
+                        help="адрес тяжелого файла или номер готовой ссылки (см. --list)")
     parser.add_argument("-n", "--requests", type=int, default=10, help="число запросов (10)")
     parser.add_argument("-t", "--timeout", type=float, default=60, help="таймаут, сек (60)")
+    parser.add_argument("-l", "--list", action="store_true", help="показать готовые ссылки")
     args = parser.parse_args()
+
+    if args.list:
+        for i, link in enumerate(load_links(), 1):
+            print(f"{i:>2}. {link['name']:<22} {link['url']}")
+        return 0
+
+    if args.url.isdigit():
+        links = load_links()
+        index = int(args.url)
+        if not 1 <= index <= len(links):
+            parser.error(f"номер ссылки должен быть от 1 до {len(links)}")
+        args.url = links[index - 1]["url"]
 
     print(f"URL: {args.url}\nЗапросов: {args.requests}\n")
     sizes, times = [], []

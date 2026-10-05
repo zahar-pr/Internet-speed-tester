@@ -1,15 +1,69 @@
 const form = document.getElementById("form");
 const startBtn = document.getElementById("start");
+const preset = document.getElementById("preset");
+const urlInput = document.getElementById("url");
 const log = document.getElementById("log");
 const result = document.getElementById("result");
 
-async function download(url) {
+// url -> размер в байтах для готовых файлов (нужен, если сервер не отдает CORS)
+const knownSizes = { "test-5mb.bin": 5242880 };
+
+fetch("links.json")
+  .then((r) => r.json())
+  .then((links) => {
+    for (const link of links) {
+      knownSizes[link.url] = link.size;
+      preset.add(new Option(link.name, link.url));
+    }
+  })
+  .catch(() => {});
+
+preset.addEventListener("change", () => (urlInput.value = preset.value));
+
+function withNoCache(url) {
   const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}nocache=${Date.now()}${Math.random().toString(36).slice(2)}`;
+}
+
+// Обычный режим: сервер разрешает CORS, читаем тело и считаем байты сами.
+async function downloadCors(url) {
   const start = performance.now();
-  const resp = await fetch(`${url}${sep}nocache=${Date.now()}`, { cache: "no-store" });
+  const resp = await fetch(url, { cache: "no-store" });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const size = (await resp.arrayBuffer()).byteLength;
   return { size, seconds: (performance.now() - start) / 1000 };
+}
+
+// Обход CORS: no-cors запрос скачивает файл, но тело недоступно.
+// Время конца загрузки берем из Resource Timing API, размер - из списка готовых файлов.
+async function downloadNoCors(url, size) {
+  const fullUrl = new URL(url, location.href).href;
+  await fetch(fullUrl, { mode: "no-cors", cache: "no-store" });
+  const entry = await waitForTiming(fullUrl);
+  return { size, seconds: entry.duration / 1000 };
+}
+
+function waitForTiming(fullUrl, timeoutMs = 120000) {
+  return new Promise((resolve, reject) => {
+    const started = performance.now();
+    (function check() {
+      const entry = performance.getEntriesByName(fullUrl).pop();
+      if (entry && entry.responseEnd > 0) return resolve(entry);
+      if (performance.now() - started > timeoutMs) return reject(new Error("таймаут"));
+      setTimeout(check, 50);
+    })();
+  });
+}
+
+async function download(url, manualSize) {
+  const reqUrl = withNoCache(url);
+  try {
+    return { ...(await downloadCors(reqUrl)), cors: true };
+  } catch (err) {
+    if (!(err instanceof TypeError)) throw err; // HTTP-ошибка, а не CORS
+    performance.clearResourceTimings();
+    return { ...(await downloadNoCors(withNoCache(url), manualSize ?? knownSizes[url] ?? null)), cors: false };
+  }
 }
 
 function addLog(text, isError = false) {
@@ -19,10 +73,14 @@ function addLog(text, isError = false) {
   log.appendChild(li);
 }
 
+const mb = (bytes) => (bytes / 1e6).toFixed(2);
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const url = document.getElementById("url").value.trim();
+  const url = urlInput.value.trim();
   const count = Number(document.getElementById("count").value) || 10;
+  const sizeMb = parseFloat(document.getElementById("size").value);
+  const manualSize = sizeMb > 0 ? sizeMb * 1e6 : null;
 
   startBtn.disabled = true;
   log.innerHTML = "";
@@ -31,23 +89,30 @@ form.addEventListener("submit", async (e) => {
   let totalBytes = 0;
   let totalSeconds = 0;
   let ok = 0;
+  let sizeUnknown = false;
 
   for (let i = 1; i <= count; i++) {
     try {
-      const { size, seconds } = await download(url);
-      totalBytes += size;
+      const { size, seconds, cors } = await download(url, manualSize);
       totalSeconds += seconds;
       ok++;
-      addLog(`${(size / 1e6).toFixed(2)} МБ за ${seconds.toFixed(3)} с -> ${(size / seconds / 1e6).toFixed(2)} МБ/с`);
+      const mode = cors ? "" : " [без CORS]";
+      if (size == null) {
+        sizeUnknown = true;
+        addLog(`за ${seconds.toFixed(3)} с, размер неизвестен${mode}`);
+      } else {
+        totalBytes += size;
+        addLog(`${mb(size)} МБ за ${seconds.toFixed(3)} с -> ${mb(size / seconds)} МБ/с${mode}`);
+      }
     } catch (err) {
       addLog(`ошибка: ${err.message}`, true);
     }
   }
 
   if (ok) {
-    document.getElementById("speed").textContent = (totalBytes / totalSeconds / 1e6).toFixed(2);
+    document.getElementById("speed").textContent = sizeUnknown ? "?" : mb(totalBytes / totalSeconds);
     document.getElementById("avg").textContent = (totalSeconds / ok).toFixed(3);
-    document.getElementById("total").textContent = (totalBytes / 1e6).toFixed(2);
+    document.getElementById("total").textContent = sizeUnknown ? "?" : mb(totalBytes);
     result.hidden = false;
   }
   startBtn.disabled = false;

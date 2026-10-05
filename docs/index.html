@@ -10,15 +10,23 @@
   <main>
     <h1>Замер скорости интернета</h1>
     <form id="form">
-      <label>Адрес файла
+      <label class="wide">Готовый файл
+        <select id="preset">
+          <option value="test-5mb.bin" data-size="5242880">BIN с этого сервера, 5 МБ</option>
+        </select>
+      </label>
+      <label class="wide">Адрес файла
         <input id="url" type="text" value="test-5mb.bin" required>
       </label>
       <label>Запросов
         <input id="count" type="number" min="1" max="50" value="10">
       </label>
+      <label>Размер, МБ
+        <input id="size" type="number" min="0" step="any" placeholder="авто">
+      </label>
       <button id="start" type="submit">Старт</button>
     </form>
-    <p class="hint">Внешний адрес должен разрешать CORS. По умолчанию - файл 5 МБ с этого же сервера.</p>
+    <p class="hint">Работает с любым адресом. Если сервер не разрешает CORS, время замеряется через Resource Timing, а размер берется из списка готовых файлов или из поля «Размер».</p>
 
     <section id="result" class="result" hidden>
       <div class="stat"><span id="speed">-</span><small>МБ/с</small></div>

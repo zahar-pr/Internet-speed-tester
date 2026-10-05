@@ -31,9 +31,9 @@ label {
   flex: 1 1 120px;
 }
 
-label:first-child { flex: 3 1 260px; }
+label.wide { flex: 1 1 100%; }
 
-input, button {
+input, select, button {
   font: inherit;
   padding: 10px 12px;
   border-radius: 8px;
